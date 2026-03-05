@@ -37,7 +37,8 @@
       "corner_radius": 7
     },
     "imagebutton": {
-      "fg_color": "transparent"
+      "fg_color": "transparent",
+      "hover_color": ["#101010","#AAAAAA"]
     }
     
   }

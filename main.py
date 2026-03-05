@@ -8,7 +8,7 @@ import os
 #import pygame.mixer as mx
 
 from option import OptionWindow
-from buttons import PlaylistButton
+from buttons import PlaylistButton, MusiclistButton
 
 # global keys
 DOCUMENTS = Path.home() / "Documents"
@@ -213,19 +213,19 @@ class Musiclist(ctk.CTkFrame):
             container = ctk.CTkFrame(self.list, **self.theme['frame2'], height=60) # container
             container.pack_propagate(False)
 
-            startbutton = ctk.CTkButton(container, image=self.play, text="",width=26,height=26, **self.theme['imagebutton']) # button
-            label = ctk.CTkLabel(container, text=ellisis(song), font=self.fonts['main'])
-            deletebutton = ctk.CTkButton(container, image=self.trash, text="")
+            startbutton = MusiclistButton(container, image=self.play, text="",width=26,height=26, style=self.theme, music=song) # button
+            label = ctk.CTkLabel(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
+            deletebutton = MusiclistButton(container, image=self.trash, text="",width=26,height=26, style=self.theme, music=song)
+            deletebutton.configure(command=lambda b=deletebutton: self.removeMusic(b))
 
-            startbutton.pack(side='left',padx=[20,5])
+            startbutton.pack(side='left',padx=[20,10])
             label.pack(side='left')
-            deletebutton.pack(side='right',padx=5)
+            deletebutton.pack(side='right',padx=[5,20])
             container.pack(side='top',fill='x',pady=1)
 
     def refresh(self):
         self.flushListframe()
         self.loadPlaylist(self.path)
-        self.start()
     
     def addMusic(self):
         file = filedialog.askopenfilename(title="Select Audio File", filetypes=[("Audio Files", "*.mp3 *.ogg")])
@@ -247,8 +247,15 @@ class Musiclist(ctk.CTkFrame):
         self.refresh()
 
 
-    def removeMusic(self):
-        self.refresh
+    def removeMusic(self, button):
+        file = self.path / button.music
+        if file.exists():
+            file.unlink()
+
+        self.data['songs'].remove(button.music)
+        with open(self.path/"list.json", "w", encoding="utf-8") as fp:
+            json.dump(self.data, fp, indent=4, ensure_ascii=False)
+        self.refresh()
 
     def flushListframe(self):
         for widget in self.list.winfo_children():
@@ -258,7 +265,7 @@ class Musiclist(ctk.CTkFrame):
 def getImage(light,dark,size=16):
     return ctk.CTkImage(light_image=Image.open(light),dark_image=Image.open(dark),size=(size,size))
 
-def ellisis(text, max_length=50):
+def ellipsis(text, max_length=20):
     return text if len(text) <= max_length else text[:max_length-3] + "..."
 
 if __name__ == "__main__":

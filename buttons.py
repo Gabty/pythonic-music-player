@@ -19,4 +19,5 @@ class MusiclistButton(ctk.CTkButton):
         super().__init__(master, *args, **kwargs)
 
         self.music = music
-        self.button_style = {i:j for i,j in style['button'].items() if i in VALID_KEYS}
+        self.button_style = {i:j for i,j in style['imagebutton'].items() if i in VALID_KEYS}
+        self.configure(**self.button_style)
