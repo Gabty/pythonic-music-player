@@ -1,0 +1,34 @@
+{
+  "font": {
+    "main": {
+      "size": 18,
+      "weigth": "normal"
+    },
+    "header": {
+      "size": 32,
+      "weigth": "bold"
+    }
+  },
+  "style":{
+    "frame": {
+      "fg_color": ["#FFFFFF","#2F2F2F"]
+    },
+    "button": {
+      "fg_color": ["#88C8F4","#281B58"],
+      "text_color": ["#000000","#FFFFFF"],
+      "hover_color": ["#99D5FF","#170C3F"],
+      "border_color":["#99D5FF","#170C3F"],
+      "border_width": 3,
+      "active_color": ["#99C8F4","#2A1672"],
+      "corner_radius": 7
+    },
+    "button2": {
+      "fg_color": ["#88C8F4","#281B58"],
+      "text_color": ["#000000","#FFFFFF"],
+      "hover_color": ["#99D5FF","#170C3F"],
+      "border_color":["#99D5FF","#170C3F"],
+      "border_width": 3,
+      "corner_radius": 7
+    }
+  }
+}
