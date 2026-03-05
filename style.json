@@ -13,6 +13,12 @@
     "frame": {
       "fg_color": ["#FFFFFF","#2F2F2F"]
     },
+    "frame2": {
+      "fg_color": ["#88C8F4","#281B58"],
+      "border_color":["#99D5FF","#170C3F"],
+      "border_width": 3,
+      "corner_radius": 7
+    },
     "button": {
       "fg_color": ["#88C8F4","#281B58"],
       "text_color": ["#000000","#FFFFFF"],
@@ -29,6 +35,10 @@
       "border_color":["#99D5FF","#170C3F"],
       "border_width": 3,
       "corner_radius": 7
+    },
+    "imagebutton": {
+      "fg_color": "transparent"
     }
+    
   }
 }

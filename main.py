@@ -1,8 +1,9 @@
 import customtkinter as ctk
 from PIL import Image
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import json
 from pathlib import Path
+import shutil
 import os
 #import pygame.mixer as mx
 
@@ -49,7 +50,7 @@ class MainApp(ctk.CTk):
         self.setPlaylist(self.playListFrame.getFirstPlayList())
     
     def setPlaylist(self, path): # called by Playlistframe
-        self.musicListFrame.loadMusic(path) # runs musiclistframe function
+        self.musicListFrame.loadPlaylist(path) # runs musiclistframe function
 
 class Player(ctk.CTkFrame):
     def __init__(self, master,theme, fonts, **kwargs):
@@ -67,7 +68,7 @@ class Playlist(ctk.CTkFrame):
         self.fonts = fonts
         self.theme = theme
         # image
-        self.plus = getImage('img/plus-symbol-button-b.png', "img/plus-symbol-button-w.png", 16)
+        self.plus = getImage('img/plus.png', "img/plus-w.png", 16)
         # grid configuration
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=0, minsize=80)
@@ -97,8 +98,8 @@ class Playlist(ctk.CTkFrame):
     def start(self):
         folders = Path(PATH).iterdir()
         for path in folders:
-            button = PlaylistButton(self.list, path=path,text=path.name,style=self.theme, font=self.fonts["main"],anchor='w',height=60,)
-            button.configure(command= lambda b=button: self.load_musiclist(b))
+            button = PlaylistButton(self.list, path=path,text=path.name,style=self.theme, font=self.fonts["main"],anchor='w',height=60)
+            button.configure(command= lambda b=button: self.loadMusiclist(b))
 
             button.pack(fill='x', expand=True, padx=[1,1], pady=[1,1])
     
@@ -133,7 +134,7 @@ class Playlist(ctk.CTkFrame):
         self.flushListframe()
         self.start()
 
-    def load_musiclist(self, button):
+    def loadMusiclist(self, button):
         if self.active and self.active.winfo_exists(): # revert the color back to normal state
             self.active.configure(fg_color=self.theme["button"]['fg_color'])
         if self.active == button: # check if active and b is same then  return if same
@@ -154,8 +155,15 @@ class Musiclist(ctk.CTkFrame):
         # initialize font/theme
         self.theme = theme
         self.fonts = fonts
-        # instanciate image
-        self.three_dots = getImage('img/dots.png', 'img/dots-w.png', 24)
+        # initialize variables
+        self.path = None
+        self.listJSON = None
+        # init images
+        self.dots_img = getImage('img/dots.png', 'img/dots-w.png', 16)
+        self.plus_img = getImage('img/plus.png', 'img/plus-w.png', 16)
+
+        self.play = getImage('img/play_arrow.png', 'img/play_arrow-w.png', 24)
+        self.trash = getImage('img/trash-bin.png', 'img/trash-bin-w.png', 24)
         # grid configuration
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=0, minsize=80)
@@ -173,33 +181,85 @@ class Musiclist(ctk.CTkFrame):
         self.header.grid_columnconfigure(2,weight=1)
         # Header Widgets
         self.header_title = ctk.CTkLabel(self.header, text="",width=200, font=self.fonts["header"],anchor="w")
-        self.header_menu = ctk.CTkButton(self.header,text="⋮",width=32,height=32,font=self.fonts["main"], command=self.optionMenu)
+        # Header container
+        self.container_button = ctk.CTkFrame(self.header)#
+        self.header_adder = ctk.CTkButton(self.container_button,image=self.plus_img, text="", width=32, height=32, command=self.addMusic)
+        self.header_menu = ctk.CTkButton(self.container_button,image=self.dots_img,text="",width=32,height=32, command=self.optionMenu)
         # Grid Widget
         self.header_title.grid(row=0,column=0,padx=40)
-        self.header_menu.grid(row=0,column=2,sticky='e',padx=5,pady=5)
-
+        self.container_button.grid(row=0,column=2,sticky='e',padx=5,pady=5)
+        self.header_adder.pack(side='left',padx=5)
+        self.header_menu.pack(side='left',padx=5)
     def optionMenu(self):
         if self.toplevel == None or not self.toplevel.winfo_exists():
             self.toplevel = OptionWindow(self)
         else:
             self.toplevel.focus()
 
-    def loadMusic(self,path):# called from main class
+    def loadPlaylist(self,path):# called from main class
+        self.flushListframe()
+        self.path = path
         if not path:
             return
-        with open(path/"list.json", "r+") as f:
-            data = json.load(f)
+        with open(path/"list.json", "r+", encoding='utf-8') as f:
+            self.data = json.load(f)
         
-        self.header_title.configure(text=data["title"])
+        self.header_title.configure(text=self.data["title"]) # set the label text to title
+
+        self.start() # 
+
+    def start(self): # loads the musics
+        for song in self.data['songs']:
+            container = ctk.CTkFrame(self.list, **self.theme['frame2'], height=60) # container
+            container.pack_propagate(False)
+
+            startbutton = ctk.CTkButton(container, image=self.play, text="",width=26,height=26, **self.theme['imagebutton']) # button
+            label = ctk.CTkLabel(container, text=ellisis(song), font=self.fonts['main'])
+            deletebutton = ctk.CTkButton(container, image=self.trash, text="")
+
+            startbutton.pack(side='left',padx=[20,5])
+            label.pack(side='left')
+            deletebutton.pack(side='right',padx=5)
+            container.pack(side='top',fill='x',pady=1)
+
+    def refresh(self):
+        self.flushListframe()
+        self.loadPlaylist(self.path)
+        self.start()
     
     def addMusic(self):
-        pass
+        file = filedialog.askopenfilename(title="Select Audio File", filetypes=[("Audio Files", "*.mp3 *.ogg")])
+
+        if not file:
+            return
+        source = Path(file)
+        if source.name in self.data['songs']:
+            return
+        destination = self.path / source.name
+
+        self.data["songs"].append(source.name)
+
+        with open(self.path/"list.json", "w", encoding="utf-8") as fp:
+            json.dump(self.data, fp, indent=4, ensure_ascii=False)
+
+        shutil.copy2(source, destination)
+
+        self.refresh()
+
 
     def removeMusic(self):
-        pass
+        self.refresh
+
+    def flushListframe(self):
+        for widget in self.list.winfo_children():
+            widget.destroy()
+        self.data = None
 
 def getImage(light,dark,size=16):
     return ctk.CTkImage(light_image=Image.open(light),dark_image=Image.open(dark),size=(size,size))
+
+def ellisis(text, max_length=50):
+    return text if len(text) <= max_length else text[:max_length-3] + "..."
 
 if __name__ == "__main__":
     if (not os.path.exists(PATH)):
