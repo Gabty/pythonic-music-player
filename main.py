@@ -45,9 +45,11 @@ class MainApp(ctk.CTk):
         # list of audio in a playlist
         self.musicListFrame = Musiclist(self,theme, fonts, fg_color="transparent")
         self.musicListFrame.grid(row=0, column=1, sticky='nsew',padx=1,pady=1)
+
+        self.setPlaylist(self.playListFrame.getFirstPlayList())
     
     def setPlaylist(self, path): # called by Playlistframe
-        self.musicListFrame.load_music(path) # runs musiclistframe function
+        self.musicListFrame.loadMusic(path) # runs musiclistframe function
 
 class Player(ctk.CTkFrame):
     def __init__(self, master,theme, fonts, **kwargs):
@@ -84,7 +86,7 @@ class Playlist(ctk.CTkFrame):
         self.header.grid_columnconfigure(2,weight=1)
 
         self.header_title = ctk.CTkLabel(self.header, text="♫ Playlist ♫", font=self.fonts["header"])
-        self.header_button = ctk.CTkButton(self.header, image=self.plus,text="",width=32,height=32,font=self.fonts["main"], command=self.create_playlist)
+        self.header_button = ctk.CTkButton(self.header, image=self.plus,text="",width=32,height=32,font=self.fonts["main"], command=self.createPlaylist)
 
         #packing
         self.header_title.grid(row=0,column=1)
@@ -95,16 +97,17 @@ class Playlist(ctk.CTkFrame):
     def start(self):
         folders = Path(PATH).iterdir()
         for path in folders:
-            button = PlaylistButton(self.list, path=str(path),text=path.name,style=self.theme, font=self.fonts["main"],anchor='w',height=60,)
+            button = PlaylistButton(self.list, path=path,text=path.name,style=self.theme, font=self.fonts["main"],anchor='w',height=60,)
             button.configure(command= lambda b=button: self.load_musiclist(b))
 
             button.pack(fill='x', expand=True, padx=[1,1], pady=[1,1])
     
-    def flush_listframe(self): # only to be called when creating playlist
+    def flushListframe(self): # only to be called when reloading playlist after adding
         for widget in self.list.winfo_children():
             widget.destroy()
+        self.active = None
     
-    def create_playlist(self):
+    def createPlaylist(self):
         dialog = ctk.CTkInputDialog(text="Name of playlist ♫", title="Test")
 
         foldername = dialog.get_input()
@@ -120,24 +123,28 @@ class Playlist(ctk.CTkFrame):
             return
         
         os.mkdir(newpath) # create folder for playlist
-        contents = {"title": foldername, "sings": []} # for future purposes
+        contents = {"title": foldername, "songs": []} # for future purposes
         with open(newpath/"list.json", 'w') as f:
             json.dump(contents,f)
         
         self.reload_listframe()
-    
+
     def reload_listframe(self):
-        self.flush_listframe()
+        self.flushListframe()
         self.start()
 
     def load_musiclist(self, button):
-        if self.active: # revert the color back to normal state
+        if self.active and self.active.winfo_exists(): # revert the color back to normal state
             self.active.configure(fg_color=self.theme["button"]['fg_color'])
-        elif self.active == button: # check if active and b is same
-            return # return if b is same as active
+        if self.active == button: # check if active and b is same then  return if same
+            return 
         self.active = button # change the active to new button
         self.active.configure(fg_color=self.theme["button"]['active_color']) # change the color of new button to active color
         self.master.setPlaylist(self.active.path) # load this from main then passed to MusiclistFrame
+
+    def getFirstPlayList(self):
+        folder = next(Path(PATH).iterdir(),None)
+        return folder if folder else None
 
 class Musiclist(ctk.CTkFrame):
     def __init__(self, master,theme, fonts, **kwargs):
@@ -165,27 +172,37 @@ class Musiclist(ctk.CTkFrame):
         self.header.grid_columnconfigure(1,weight=1)
         self.header.grid_columnconfigure(2,weight=1)
         # Header Widgets
-        self.header_title = ctk.CTkLabel(self.header, text="", font=self.fonts["header"])
-        self.header_menu = ctk.CTkButton(self.header,text="⋮",width=32,height=32,font=self.fonts["main"], command=self.option_toplevel)
+        self.header_title = ctk.CTkLabel(self.header, text="",width=200, font=self.fonts["header"],anchor="w")
+        self.header_menu = ctk.CTkButton(self.header,text="⋮",width=32,height=32,font=self.fonts["main"], command=self.optionMenu)
         # Grid Widget
-        self.header_title.grid(row=0,column=0,padx=5)
+        self.header_title.grid(row=0,column=0,padx=40)
         self.header_menu.grid(row=0,column=2,sticky='e',padx=5,pady=5)
 
-    def load_music(self,path):# called from main class
-        print(path)
-    def option_toplevel(self):
+    def optionMenu(self):
         if self.toplevel == None or not self.toplevel.winfo_exists():
             self.toplevel = OptionWindow(self)
         else:
             self.toplevel.focus()
+
+    def loadMusic(self,path):# called from main class
+        if not path:
+            return
+        with open(path/"list.json", "r+") as f:
+            data = json.load(f)
         
+        self.header_title.configure(text=data["title"])
+    
+    def addMusic(self):
+        pass
+
+    def removeMusic(self):
+        pass
 
 def getImage(light,dark,size=16):
     return ctk.CTkImage(light_image=Image.open(light),dark_image=Image.open(dark),size=(size,size))
 
 if __name__ == "__main__":
     if (not os.path.exists(PATH)):
-        print("Hello")
         os.mkdir(PATH)
 
     ctk.set_appearance_mode('dark')
