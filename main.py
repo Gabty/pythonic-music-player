@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from PIL import Image
-from tkinter import messagebox, filedialog
+from tkinter import messagebox
 import json
 from pathlib import Path
 import shutil
@@ -8,7 +8,8 @@ import os
 #import pygame.mixer as mx
 
 from option import OptionWindow
-from buttons import PlaylistButton, MusiclistButton
+from button import PlaylistButton, MusiclistButton
+from label import MarqueeLabel
 
 # global keys
 DOCUMENTS = Path.home() / "Documents"
@@ -27,8 +28,8 @@ class MainApp(ctk.CTk):
             style = json.load(f)
         
         #Unpack the JSON "style"
-        theme = style["style"]
-        fonts = {i:ctk.CTkFont(size=style["font"][i]["size"], weight=style["font"][i]["weigth"]) for i in style["font"]}
+        self.theme = style["style"]
+        self.fonts = {i:ctk.CTkFont(size=style["font"][i]["size"], weight=style["font"][i]["weigth"]) for i in style["font"]}
 
         # Grid Configuration
         self.grid_columnconfigure(0, weight=1)
@@ -38,13 +39,13 @@ class MainApp(ctk.CTk):
 
         # Frames
         # Frame that play, stop, backward, or forward a music
-        self.playerFrame = Player(self, theme, fonts, fg_color=theme["frame"]["fg_color"])
+        self.playerFrame = Player(self, self.theme, self.fonts, fg_color=self.theme["frame"]["fg_color"])
         self.playerFrame.grid(row=1, columnspan=2, sticky='nsew',padx=1,pady=1)
         # local playlist
-        self.playListFrame = Playlist(self,theme,fonts, fg_color="transparent")
+        self.playListFrame = Playlist(self,self.theme,self.fonts, fg_color="transparent")
         self.playListFrame.grid(row=0, column=0, sticky='nsew',padx=1,pady=1)
         # list of audio in a playlist
-        self.musicListFrame = Musiclist(self,theme, fonts, fg_color="transparent")
+        self.musicListFrame = Musiclist(self,self.theme, self.fonts, fg_color="transparent")
         self.musicListFrame.grid(row=0, column=1, sticky='nsew',padx=1,pady=1)
 
         self.setPlaylist(self.playListFrame.getFirstPlayList())
@@ -55,8 +56,9 @@ class MainApp(ctk.CTk):
 class Player(ctk.CTkFrame):
     def __init__(self, master,theme, fonts, **kwargs):
         super().__init__(master,**kwargs)
-
-        self.label = ctk.CTkLabel(self, text="Hello", font=fonts["header"])
+        self.theme = theme
+        self.fonts = fonts
+        self.label = MarqueeLabel(self, "Testing",self.theme, self.fonts)
         self.label.pack()
 
 class Playlist(ctk.CTkFrame):
@@ -212,8 +214,8 @@ class Musiclist(ctk.CTkFrame):
         for song in self.data['songs']:
             container = ctk.CTkFrame(self.list, **self.theme['frame2'], height=60) # container
             container.pack_propagate(False)
-
-            startbutton = MusiclistButton(container, image=self.play, text="",width=26,height=26, style=self.theme, music=song) # button
+            # widget of container
+            startbutton = MusiclistButton(container, image=self.play, text="",width=26,height=26, style=self.theme, music=song) 
             label = ctk.CTkLabel(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
             deletebutton = MusiclistButton(container, image=self.trash, text="",width=26,height=26, style=self.theme, music=song)
             deletebutton.configure(command=lambda b=deletebutton: self.removeMusic(b))
@@ -223,17 +225,19 @@ class Musiclist(ctk.CTkFrame):
             deletebutton.pack(side='right',padx=[5,20])
             container.pack(side='top',fill='x',pady=1)
 
-    def refresh(self):
-        self.flushListframe()
+    
+    def refresh(self): # refresh the framelist
+        self.flushListframe() 
         self.loadPlaylist(self.path)
     
     def addMusic(self):
-        file = filedialog.askopenfilename(title="Select Audio File", filetypes=[("Audio Files", "*.mp3 *.ogg")])
+        file = ctk.filedialog.askopenfilename(title="Select Audio File", filetypes=[("Audio Files", "*.mp3 *.ogg")]) # accepts .mp3 and .ogg
 
-        if not file:
+        if not file: 
             return
+
         source = Path(file)
-        if source.name in self.data['songs']:
+        if source.name in self.data['songs']: # prevent duplicate name file
             return
         destination = self.path / source.name
 
@@ -242,19 +246,20 @@ class Musiclist(ctk.CTkFrame):
         with open(self.path/"list.json", "w", encoding="utf-8") as fp:
             json.dump(self.data, fp, indent=4, ensure_ascii=False)
 
-        shutil.copy2(source, destination)
+        shutil.copy2(source, destination) # make a copy of music
 
         self.refresh()
 
 
     def removeMusic(self, button):
         file = self.path / button.music
-        if file.exists():
+        if file.exists(): # failsafe deletion
             file.unlink()
 
-        self.data['songs'].remove(button.music)
+        self.data['songs'].remove(button.music) # remove the chosen music in data
         with open(self.path/"list.json", "w", encoding="utf-8") as fp:
             json.dump(self.data, fp, indent=4, ensure_ascii=False)
+
         self.refresh()
 
     def flushListframe(self):
