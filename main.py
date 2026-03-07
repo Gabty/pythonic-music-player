@@ -1,5 +1,4 @@
 import customtkinter as ctk
-from PIL import Image
 from tkinter import messagebox
 import json
 from pathlib import Path
@@ -8,8 +7,8 @@ import os
 #import pygame.mixer as mx
 
 from option import OptionWindow
-from button import PlaylistButton, MusiclistButton
-from label import MarqueeLabel
+from button import PlaylistButton, MusiclistButton, ImageButton
+from label import Label, MarqueeLabel
 
 # global keys
 DOCUMENTS = Path.home() / "Documents"
@@ -23,11 +22,15 @@ class MainApp(ctk.CTk):
         self.geometry("1280x780")
         self.title("Audio Player")
         # Style
-        # Unload the file
-        with open('style.json', 'r+') as f:
-            style = json.load(f)
+        # Unload the JSON FILES
+
+        with open('config/style.json', 'r') as fp: # 
+            style = json.load(fp)
+
+        with open('config/images.json', 'r') as fp: # get dict of icons
+            self.images = json.load(fp)
         
-        #Unpack the JSON "style"
+        #Unpack the style to theme and fonts
         self.theme = style["style"]
         self.fonts = {i:ctk.CTkFont(size=style["font"][i]["size"], weight=style["font"][i]["weigth"]) for i in style["font"]}
 
@@ -39,13 +42,13 @@ class MainApp(ctk.CTk):
 
         # Frames
         # Frame that play, stop, backward, or forward a music
-        self.playerFrame = Player(self, self.theme, self.fonts, fg_color=self.theme["frame"]["fg_color"])
+        self.playerFrame = Player(self, theme=self.theme, fonts=self.fonts,images=self.images,  fg_color=self.theme["frame"]["fg_color"])
         self.playerFrame.grid(row=1, columnspan=2, sticky='nsew',padx=1,pady=1)
         # local playlist
-        self.playListFrame = Playlist(self,self.theme,self.fonts, fg_color="transparent")
+        self.playListFrame = Playlist(self,self.theme,self.fonts,images=self.images, fg_color="transparent")
         self.playListFrame.grid(row=0, column=0, sticky='nsew',padx=1,pady=1)
         # list of audio in a playlist
-        self.musicListFrame = Musiclist(self,self.theme, self.fonts, fg_color="transparent")
+        self.musicListFrame = Musiclist(self,self.theme, self.fonts,images=self.images, fg_color="transparent")
         self.musicListFrame.grid(row=0, column=1, sticky='nsew',padx=1,pady=1)
 
         self.setPlaylist(self.playListFrame.getFirstPlayList())
@@ -54,15 +57,16 @@ class MainApp(ctk.CTk):
         self.musicListFrame.loadPlaylist(path) # runs musiclistframe function
 
 class Player(ctk.CTkFrame):
-    def __init__(self, master,theme, fonts, **kwargs):
+    def __init__(self, master,theme, fonts,images, **kwargs):
         super().__init__(master,**kwargs)
         self.theme = theme
         self.fonts = fonts
-        self.label = MarqueeLabel(self, "Testing",self.theme, self.fonts)
+        self.images = images
+        self.label = MarqueeLabel(self, "HELLLOOO",self.theme, self.fonts)
         self.label.pack()
 
 class Playlist(ctk.CTkFrame):
-    def __init__(self, master,theme, fonts, **kwargs):
+    def __init__(self, master,theme, fonts,images, **kwargs):
         super().__init__(master, **kwargs)
         # top level
         self.toplevel = None
@@ -70,7 +74,7 @@ class Playlist(ctk.CTkFrame):
         self.fonts = fonts
         self.theme = theme
         # image
-        self.plus = getImage('img/plus.png', "img/plus-w.png", 16)
+        self.images = images
         # grid configuration
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=0, minsize=80)
@@ -88,8 +92,8 @@ class Playlist(ctk.CTkFrame):
         self.header.grid_columnconfigure(1,weight=0)
         self.header.grid_columnconfigure(2,weight=1)
 
-        self.header_title = ctk.CTkLabel(self.header, text="♫ Playlist ♫", font=self.fonts["header"])
-        self.header_button = ctk.CTkButton(self.header, image=self.plus,text="",width=32,height=32,font=self.fonts["main"], command=self.createPlaylist)
+        self.header_title = Label(self.header, text="♫ Playlist ♫", font=self.fonts["header"])
+        self.header_button = ImageButton(self.header, image=(*self.images['plus'],16),text="",width=32,height=32,font=self.fonts["main"], command=self.createPlaylist)
 
         #packing
         self.header_title.grid(row=0,column=1)
@@ -150,22 +154,23 @@ class Playlist(ctk.CTkFrame):
         return folder if folder else None
 
 class Musiclist(ctk.CTkFrame):
-    def __init__(self, master,theme, fonts, **kwargs):
+    def __init__(self, master,theme, fonts, images, **kwargs):
         super().__init__(master, **kwargs)
         # top level
         self.toplevel = None
-        # initialize font/theme
+        # initialize font/theme/images
         self.theme = theme
         self.fonts = fonts
+        self.images = images
         # initialize variables
         self.path = None
         self.listJSON = None
         # init images
-        self.dots_img = getImage('img/dots.png', 'img/dots-w.png', 16)
+        """self.dots_img = getImage('img/dots.png', 'img/dots-w.png', 16)
         self.plus_img = getImage('img/plus.png', 'img/plus-w.png', 16)
 
         self.play = getImage('img/play_arrow.png', 'img/play_arrow-w.png', 24)
-        self.trash = getImage('img/trash-bin.png', 'img/trash-bin-w.png', 24)
+        self.trash = getImage('img/trash-bin.png', 'img/trash-bin-w.png', 24)"""
         # grid configuration
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=0, minsize=80)
@@ -182,11 +187,11 @@ class Musiclist(ctk.CTkFrame):
         self.header.grid_columnconfigure(1,weight=1)
         self.header.grid_columnconfigure(2,weight=1)
         # Header Widgets
-        self.header_title = ctk.CTkLabel(self.header, text="",width=200, font=self.fonts["header"],anchor="w")
+        self.header_title = Label(self.header, text="",width=200, font=self.fonts["header"],anchor="w")
         # Header container
         self.container_button = ctk.CTkFrame(self.header)#
-        self.header_adder = ctk.CTkButton(self.container_button,image=self.plus_img, text="", width=32, height=32, command=self.addMusic)
-        self.header_menu = ctk.CTkButton(self.container_button,image=self.dots_img,text="",width=32,height=32, command=self.optionMenu)
+        self.header_adder = ImageButton(self.container_button,image=(*self.images['plus'], 16), text="", width=32, height=32, command=self.addMusic)
+        self.header_menu = ImageButton(self.container_button,image=(*self.images['dot'], 16),text="",width=32,height=32, command=self.optionMenu)
         # Grid Widget
         self.header_title.grid(row=0,column=0,padx=40)
         self.container_button.grid(row=0,column=2,sticky='e',padx=5,pady=5)
@@ -206,7 +211,7 @@ class Musiclist(ctk.CTkFrame):
         with open(path/"list.json", "r+", encoding='utf-8') as f:
             self.data = json.load(f)
         
-        self.header_title.configure(text=self.data["title"]) # set the label text to title
+        self.header_title.setText(self.data['title'])
 
         self.start() # 
 
@@ -215,9 +220,9 @@ class Musiclist(ctk.CTkFrame):
             container = ctk.CTkFrame(self.list, **self.theme['frame2'], height=60) # container
             container.pack_propagate(False)
             # widget of container
-            startbutton = MusiclistButton(container, image=self.play, text="",width=26,height=26, style=self.theme, music=song) 
+            startbutton = MusiclistButton(container, image=(*self.images['play_arrow'], 24), text="",width=26,height=26, style=self.theme, music=song) 
             label = ctk.CTkLabel(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
-            deletebutton = MusiclistButton(container, image=self.trash, text="",width=26,height=26, style=self.theme, music=song)
+            deletebutton = MusiclistButton(container, image=(*self.images['trash'], 24), text="",width=26,height=26, style=self.theme, music=song)
             deletebutton.configure(command=lambda b=deletebutton: self.removeMusic(b))
 
             startbutton.pack(side='left',padx=[20,10])
@@ -266,9 +271,6 @@ class Musiclist(ctk.CTkFrame):
         for widget in self.list.winfo_children():
             widget.destroy()
         self.data = None
-
-def getImage(light,dark,size=16):
-    return ctk.CTkImage(light_image=Image.open(light),dark_image=Image.open(dark),size=(size,size))
 
 def ellipsis(text, max_length=20):
     return text if len(text) <= max_length else text[:max_length-3] + "..."

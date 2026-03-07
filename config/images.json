@@ -1,0 +1,6 @@
+{
+    "plus": ["img/plus.png", "img/plus-w.png"],
+    "dot": ["img/dots.png", "img/dots-w.png"],
+    "trash": ["img/trash-bin.png", "img/trash-bin-w.png"],
+    "play_arrow": ["img/play_arrow.png", "img/play_arrow-w.png"]
+}
