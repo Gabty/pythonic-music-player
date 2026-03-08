@@ -93,7 +93,7 @@ class Playlist(ctk.CTkFrame):
         self.header.grid_columnconfigure(2,weight=1)
 
         self.header_title = Label(self.header, text="♫ Playlist ♫", font=self.fonts["header"])
-        self.header_button = ImageButton(self.header, image=(*self.images['plus'],16),text="",width=32,height=32,font=self.fonts["main"], command=self.createPlaylist)
+        self.header_button = ImageButton(self.header, image=(*self.images['plus'],16),style=self.theme['button'],width=32,height=32,font=self.fonts["main"], command=self.createPlaylist,toggle=False)
 
         #packing
         self.header_title.grid(row=0,column=1)
@@ -104,7 +104,7 @@ class Playlist(ctk.CTkFrame):
     def start(self):
         folders = Path(PATH).iterdir()
         for path in folders:
-            button = PlaylistButton(self.list, path=path,text=path.name,style=self.theme, font=self.fonts["main"],anchor='w',height=60)
+            button = PlaylistButton(self.list, path=path,text=path.name,style=self.theme['button'], font=self.fonts["main"],anchor='w',height=60)
             button.configure(command= lambda b=button: self.loadMusiclist(b))
 
             button.pack(fill='x', expand=True, padx=[1,1], pady=[1,1])
@@ -119,9 +119,13 @@ class Playlist(ctk.CTkFrame):
 
         foldername = dialog.get_input()
 
-        if not foldername:
+        if foldername is None: # Cancelled
+            return
+
+        if not foldername.strip(): # String Input is space or empty but pressed ok
             messagebox.showerror("Value Error", "Empty Field") # if the foldername is empty
             return
+
 
         newpath = PATH/foldername
 
@@ -190,8 +194,8 @@ class Musiclist(ctk.CTkFrame):
         self.header_title = Label(self.header, text="",width=200, font=self.fonts["header"],anchor="w")
         # Header container
         self.container_button = ctk.CTkFrame(self.header)#
-        self.header_adder = ImageButton(self.container_button,image=(*self.images['plus'], 16), text="", width=32, height=32, command=self.addMusic)
-        self.header_menu = ImageButton(self.container_button,image=(*self.images['dot'], 16),text="",width=32,height=32, command=self.optionMenu)
+        self.header_adder = ImageButton(self.container_button,image=(*self.images['plus'], 16),style=self.theme['button'], width=32, height=32, command=self.addMusic,toggle=False)
+        self.header_menu = ImageButton(self.container_button,image=(*self.images['dot'], 16),style=self.theme['button'],width=32,height=32, command=self.optionMenu,toggle=False)
         # Grid Widget
         self.header_title.grid(row=0,column=0,padx=40)
         self.container_button.grid(row=0,column=2,sticky='e',padx=5,pady=5)
@@ -220,10 +224,10 @@ class Musiclist(ctk.CTkFrame):
             container = ctk.CTkFrame(self.list, **self.theme['frame2'], height=60) # container
             container.pack_propagate(False)
             # widget of container
-            startbutton = MusiclistButton(container, image=(*self.images['play_arrow'], 24), text="",width=26,height=26, style=self.theme, music=song) 
+            startbutton = MusiclistButton(container, image=(*self.images['play_arrow'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False) 
             label = ctk.CTkLabel(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
-            deletebutton = MusiclistButton(container, image=(*self.images['trash'], 24), text="",width=26,height=26, style=self.theme, music=song)
-            deletebutton.configure(command=lambda b=deletebutton: self.removeMusic(b))
+            deletebutton = MusiclistButton(container, image=(*self.images['trash'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False)
+            deletebutton.set_command(command=lambda b=deletebutton: self.removeMusic(b))
 
             startbutton.pack(side='left',padx=[20,10])
             label.pack(side='left')
