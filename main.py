@@ -226,7 +226,7 @@ class Musiclist(ctk.CTkFrame):
             container.pack_propagate(False)
             # widget of container
             startbutton = MusiclistButton(container, image=(*self.images['play_arrow'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False) 
-            label = ctk.CTkLabel(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
+            label = Label(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
             deletebutton = MusiclistButton(container, image=(*self.images['trash'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False)
             deletebutton.set_command(command=lambda b=deletebutton: self.removeMusic(b))
 

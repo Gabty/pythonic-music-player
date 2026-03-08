@@ -4,7 +4,7 @@ from PIL import Image
 #global variables
 VALID_KEYS = ["fg_color", "text_color", "hover_color", "border_color", "corner_radius", "border_width"]
 
-class ToggleButton(ctk.CTkButton):
+class Button(ctk.CTkButton):
     def __init__(self, master,style,*args, **kwargs):
         self.user_command = kwargs.pop("command", None)
         self.toggle = kwargs.pop('toggle', True) # mostly true
@@ -28,12 +28,12 @@ class ToggleButton(ctk.CTkButton):
         else:
             self.configure(fg_color=self.b_style['fg_color'])
     
-    def set_command(self, command):
+    def set_command(self, command): # set new command
         if command:
             self.user_command = command
 
 
-class PlaylistButton(ToggleButton): # it stores the path of chosen button for easy navigation in Playlist clas
+class PlaylistButton(Button): # Inherits Button and store path
     def __init__(self,master,path,style,*args,**kwargs):
         super().__init__(master,style, *args, **kwargs)
         self.path = path
@@ -41,7 +41,7 @@ class PlaylistButton(ToggleButton): # it stores the path of chosen button for ea
     def press(self):
         self.configure()
 
-class ImageButton(ToggleButton):
+class ImageButton(Button): # Inherit Button
     def __init__(self, master,image,style, *args, **kwargs):
         
         kwargs['image'] = self.getImage(*image)
@@ -57,7 +57,7 @@ class ImageButton(ToggleButton):
         if img:
             self.configure(image=img)
 
-class MusiclistButton(ImageButton): # it store music name for playing and deleting for Musiclist class
+class MusiclistButton(ImageButton): # Inherits ImageButton and store music
     def __init__(self, master, music,style, image, *args, **kwargs):
         super().__init__(master,image,style, *args, **kwargs)
 
