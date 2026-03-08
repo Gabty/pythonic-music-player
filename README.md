@@ -4,6 +4,7 @@
 A desktop music player app that is built purely on python.
 The playlist are stored in the user's document folder for easy access.
 This app allows to import .mp3 and .ogg audio files.
+It uses pygame mixer to play the audio and control.
 
 ## Features
 - Create and manage playlists
@@ -14,6 +15,7 @@ This app allows to import .mp3 and .ogg audio files.
 - CustomTkinter
 - Pillow
 - JSON
+- Pygame
 
 ## Assets
 Images from https://www.flaticon.com/
