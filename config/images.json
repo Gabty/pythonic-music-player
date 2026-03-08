@@ -3,5 +3,10 @@
     "dot": ["img/dots.png", "img/dots-w.png"],
     "trash": ["img/trash_bin.png", "img/trash_bin-w.png"],
     "play_arrow": ["img/play_arrow.png", "img/play_arrow-w.png"],
-    "play_button": ["img/play_button.png","img/play_button-w.png"]
+    "play_button": ["img/play_button.png","img/play_button-w.png"],
+    "pause": ["img/pause_button.png","img/pause_button-w.png"],
+    "forward": ["img/forward.png","img/forward-w.png"],
+    "backward": ["img/backward.png", "img/backward-w.png"],
+    "next": ["img/next.png",  "img/next-w.png"],
+    "replay": ["img/replay.png", "img/replay-w.png"]
 }

@@ -6,7 +6,7 @@ import shutil
 import os
 
 from option import OptionWindow
-from button import PlaylistButton, MusiclistButton, ImageButton
+from button import PlaylistButton, MusiclistButton, ImageButton, ToggleImageButton
 from label import Label, MarqueeLabel
 from music import MusicPlayer
 
@@ -73,26 +73,52 @@ class Player(ctk.CTkFrame):
         # grid config
         self.grid_columnconfigure(0, weight=1)
         # widgets
-        self.marquee = MarqueeLabel(self, "",self.theme['marqueelabel'], self.fonts)
+        self.marquee = MarqueeLabel(self, "",self.theme['marqueelabel'], self.fonts, width=560)
         self.slider = ctk.CTkSlider(self, orientation='horizontal', from_=0, to=100, height=20,width=800)
+        self.slider.set(0)
 
-        self.container = ctk.CTkFrame(self)
+        self.container = ctk.CTkFrame(self, fg_color="transparent")
+        self.control = ctk.CTkFrame(self.container, fg_color="transparent")
         
-        self.play = ImageButton(self.container, (*self.images['play_button'], 48), style=self.theme['imagebutton'],width=48,corner_radius=20, toggle=False)
-        #self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
-        #self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
-        ##self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
-        #self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
+        self.playbtn = ToggleImageButton(self.control, images=[self.images['play_button'], self.images['pause']], style=self.theme['imagebutton'],commands=[self.play, self.pause],width=48,corner_radius=20, toggle=False)
+        self.forwardbtn = ImageButton(self.control, (*self.images['forward'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.forward)
+        self.backwardbtn = ImageButton(self.control, (*self.images['backward'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.backward)
+        self.nextbtn = ImageButton(self.control, (*self.images['next'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.next)
+        self.replaybtn = ImageButton(self.control, (*self.images['replay'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.replay)
 
         
 
         self.marquee.grid(row=0,column=0,pady=2)
         self.slider.grid(row=1,column=0,pady=2)
-        self.play.pack(fill='x', side='top')
+        self.replaybtn.pack(side='left')
+        self.backwardbtn.pack(side='left')
+        self.playbtn.pack(side='left')
+        self.forwardbtn.pack(side='left')
+        self.nextbtn.pack(side='left')
+        self.control.pack(anchor='center')
+
         self.container.grid(row=2,column=0,pady=5, sticky='ew')
     
     def setMarquee(self, text):
         self.marquee.setText(text)
+    
+    def play(self):
+        print('play')
+
+    def pause(self):
+        print('pause')
+    
+    def forward(self):
+        print('forward')
+    
+    def backward(self):
+        print('backward')
+    
+    def next(self):
+        print('next')
+
+    def replay(self):
+        print('replay')
 
 class Playlist(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):

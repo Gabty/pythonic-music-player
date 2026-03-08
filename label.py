@@ -14,7 +14,7 @@ class MarqueeLabel(ctk.CTkCanvas):
         self.theme = theme
         self.mode = 0 if ctk.get_appearance_mode() == 'light' else 1
 
-        self.canvas_width = 360
+        self.canvas_width = kwargs.pop('width', 360)
         self.text_width = self.fonts.measure(text)
         # set 
         self.configure(width=self.canvas_width,height=self.fonts.metrics('linespace'), bg=self.theme['fg_color'][self.mode], highlightthickness=0)

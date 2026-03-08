@@ -31,6 +31,14 @@ class Button(ctk.CTkButton):
     def set_command(self, command): # set new command
         if command:
             self.user_command = command
+    
+    @staticmethod
+    def getImage(light,dark,size=16):
+        return ctk.CTkImage(light_image=Image.open(light),dark_image=Image.open(dark),size=(size,size))
+
+    def setImage(self, img): #
+        if img:
+            self.configure(image=img)
 
 
 class PlaylistButton(Button): # Inherits Button and store path
@@ -48,14 +56,23 @@ class ImageButton(Button): # Inherit Button
         kwargs['text'] = ""
         super().__init__(master,style, *args, **kwargs)
 
+class ToggleImageButton(Button):
+    def __init__(self, master, images, style,commands, *args, **kwargs):
+        self.commands = commands
+        self.width = kwargs.get('width')
+        self.pre_images = [self.getImage(*i, self.width) for i in images]
+        kwargs['image'] = self.pre_images[0]
+        kwargs['text'] = ""
+        super().__init__(master, style, *args, **kwargs)
+        self.is_pause = self.active
+    def run(self):
+        self.is_pause = not self.is_pause
+        if not self.is_pause:
+            self.commands[0]() # first command
+        else:
+            self.commands[1]() # second command
+        self.setImage(self.pre_images[self.is_pause])
 
-    @staticmethod
-    def getImage(light,dark,size=16):
-        return ctk.CTkImage(light_image=Image.open(light),dark_image=Image.open(dark),size=(size,size))
-
-    def setImage(self, img): #
-        if img:
-            self.configure(image=img)
 
 class MusiclistButton(ImageButton): # Inherits ImageButton and store music
     def __init__(self, master, music,style, image, *args, **kwargs):
