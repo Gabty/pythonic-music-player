@@ -34,10 +34,8 @@ class ToggleButton(ctk.CTkButton):
 
 
 class PlaylistButton(ToggleButton): # it stores the path of chosen button for easy navigation in Playlist clas
-
     def __init__(self,master,path,style,*args,**kwargs):
         super().__init__(master,style, *args, **kwargs)
-
         self.path = path
     
     def press(self):

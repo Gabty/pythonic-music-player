@@ -62,7 +62,8 @@ class Player(ctk.CTkFrame):
         self.theme = theme
         self.fonts = fonts
         self.images = images
-        self.label = MarqueeLabel(self, "HELLLOOO",self.theme, self.fonts)
+        self.label = MarqueeLabel(self, "HELLLOOO",self.theme['marqueelabel'], self.fonts)
+        self.label.setText("New HelloAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         self.label.pack()
 
 class Playlist(ctk.CTkFrame):
@@ -270,6 +271,11 @@ class Musiclist(ctk.CTkFrame):
             json.dump(self.data, fp, indent=4, ensure_ascii=False)
 
         self.refresh()
+
+    def playMusic(self, button):
+        file = self.path / button.music
+        if file.exists():
+            pass
 
     def flushListframe(self):
         for widget in self.list.winfo_children():
