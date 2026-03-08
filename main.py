@@ -4,11 +4,11 @@ import json
 from pathlib import Path
 import shutil
 import os
-#import pygame.mixer as mx
 
 from option import OptionWindow
 from button import PlaylistButton, MusiclistButton, ImageButton
 from label import Label, MarqueeLabel
+from music import MusicPlayer
 
 # global keys
 DOCUMENTS = Path.home() / "Documents"
@@ -38,7 +38,7 @@ class MainApp(ctk.CTk):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=3)
         self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=0, minsize= 80)
+        self.grid_rowconfigure(1, weight=0, minsize= 120)
 
         # Frames
         # Frame that play, stop, backward, or forward a music
@@ -55,16 +55,44 @@ class MainApp(ctk.CTk):
     
     def setPlaylist(self, path): # called by Playlistframe
         self.musicListFrame.loadPlaylist(path) # runs musiclistframe function
+    
+    def setMarquee(self, text):
+        self.playerFrame.setMarquee(str(text))
+    
 
 class Player(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):
         super().__init__(master,**kwargs)
+        # master
+        self.master = master
+        # init theme, fonts,images
         self.theme = theme
         self.fonts = fonts
         self.images = images
-        self.label = MarqueeLabel(self, "HELLLOOO",self.theme['marqueelabel'], self.fonts)
-        self.label.setText("New HelloAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-        self.label.pack()
+        self.player = MusicPlayer(master)
+        # grid config
+        self.grid_columnconfigure(0, weight=1)
+        # widgets
+        self.marquee = MarqueeLabel(self, "",self.theme['marqueelabel'], self.fonts)
+        self.slider = ctk.CTkSlider(self, orientation='horizontal', from_=0, to=100, height=20,width=800)
+
+        self.container = ctk.CTkFrame(self)
+        
+        self.play = ImageButton(self.container, (*self.images['play_button'], 48), style=self.theme['imagebutton'],width=48,corner_radius=20, toggle=False)
+        #self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
+        #self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
+        ##self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
+        #self.play = ImageButton(master, self.images, self.theme['imagebutton'], toggle=False)
+
+        
+
+        self.marquee.grid(row=0,column=0,pady=2)
+        self.slider.grid(row=1,column=0,pady=2)
+        self.play.pack(fill='x', side='top')
+        self.container.grid(row=2,column=0,pady=5, sticky='ew')
+    
+    def setMarquee(self, text):
+        self.marquee.setText(text)
 
 class Playlist(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):
@@ -161,8 +189,9 @@ class Playlist(ctk.CTkFrame):
 class Musiclist(ctk.CTkFrame):
     def __init__(self, master,theme, fonts, images, **kwargs):
         super().__init__(master, **kwargs)
-        # top level
+        # top level and master
         self.toplevel = None
+        self.master = master
         # initialize font/theme/images
         self.theme = theme
         self.fonts = fonts
@@ -170,12 +199,6 @@ class Musiclist(ctk.CTkFrame):
         # initialize variables
         self.path = None
         self.listJSON = None
-        # init images
-        """self.dots_img = getImage('img/dots.png', 'img/dots-w.png', 16)
-        self.plus_img = getImage('img/plus.png', 'img/plus-w.png', 16)
-
-        self.play = getImage('img/play_arrow.png', 'img/play_arrow-w.png', 24)
-        self.trash = getImage('img/trash-bin.png', 'img/trash-bin-w.png', 24)"""
         # grid configuration
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=0, minsize=80)
@@ -226,6 +249,7 @@ class Musiclist(ctk.CTkFrame):
             container.pack_propagate(False)
             # widget of container
             startbutton = MusiclistButton(container, image=(*self.images['play_arrow'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False) 
+            startbutton.set_command(command=lambda b=startbutton: self.playMusic(b))
             label = Label(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
             deletebutton = MusiclistButton(container, image=(*self.images['trash'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False)
             deletebutton.set_command(command=lambda b=deletebutton: self.removeMusic(b))
@@ -260,7 +284,6 @@ class Musiclist(ctk.CTkFrame):
 
         self.refresh()
 
-
     def removeMusic(self, button):
         file = self.path / button.music
         if file.exists(): # failsafe deletion
@@ -275,7 +298,7 @@ class Musiclist(ctk.CTkFrame):
     def playMusic(self, button):
         file = self.path / button.music
         if file.exists():
-            pass
+            self.master.setMarquee(button.music)
 
     def flushListframe(self):
         for widget in self.list.winfo_children():
