@@ -80,6 +80,7 @@ class ToggleImageButton(Button):
     def reset(self):
         self.is_pause = False
         self.commands[0]()
+        self.setImage(self.pre_images[self.is_pause])
 
 
 class MusiclistButton(ImageButton): # Inherits ImageButton and store music

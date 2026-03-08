@@ -8,13 +8,16 @@ class MusicPlayer:
         self.index = 0
         self.musicList = []
     
-    def play(self, name):
-        self.index = self.getIndex(name)
-        mx.music.load()
+    def playByName(self, name): # 
+        self.index = self.getIndex(name) # checks if member of musicList
+        file = self.getFile(self.index)
+        print(file)
+        mx.music.load(file)
         mx.music.play()
-
-    def stop(self):
-        mx.music.stop()
+    
+    def playByIndex(self, index):
+        mx.music.load(self.getFile(index))
+        mx.music.play()
 
     def pause(self):
         mx.music.pause()
@@ -37,6 +40,8 @@ class MusicPlayer:
     def getIndex(self, name):
         return self.musicList.index(name) if name in self.musicList else 0
 
-    def concat(self,index):
+    def getFile(self,index): # return file path using index
+        if index > len(self.musicList) or index < 0:
+            return
         file = self.musicList[index]
         return str(self.folder/file)

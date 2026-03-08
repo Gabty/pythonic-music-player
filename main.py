@@ -65,6 +65,9 @@ class MainApp(ctk.CTk):
     def setFolder(self, path):
         self.playerFrame.setFolder(path)
     
+    def playMusic(self, name):
+        self.playerFrame.play(name)
+    
 
 class Player(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):
@@ -86,7 +89,7 @@ class Player(ctk.CTkFrame):
         self.container = ctk.CTkFrame(self, fg_color="transparent")
         self.control = ctk.CTkFrame(self.container, fg_color="transparent")
         
-        self.playbtn = ToggleImageButton(self.control, images=[self.images['play_button'], self.images['pause']], style=self.theme['imagebutton'],commands=[self.play, self.pause],width=48,corner_radius=20, toggle=False)
+        self.playbtn = ToggleImageButton(self.control, images=[self.images['play_button'], self.images['pause']], style=self.theme['imagebutton'],commands=[self.resume, self.pause],width=48,corner_radius=20, toggle=False)
         self.forwardbtn = ImageButton(self.control, (*self.images['forward'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.forward)
         self.backwardbtn = ImageButton(self.control, (*self.images['backward'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.backward)
         self.nextbtn = ImageButton(self.control, (*self.images['next'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.next)
@@ -113,23 +116,27 @@ class Player(ctk.CTkFrame):
     def setFolder(self, name):
         self.player.setFolder(name)
 
-    def play(self): # 
-        print('play')
+    def play(self, name):
+        self.playbtn.reset()
+        self.player.playByName(name)
+    
+    def resume(self):
+        self.player.resume()
 
     def pause(self): #
-        print('pause')
+        self.player.pause()
     
     def forward(self):
-        print('forward')
+        self.player.forward()
     
     def backward(self):
-        print('backward')
+        self.player.backward()
     
     def next(self):
-        print('next')
+        self.player.next()
 
     def replay(self):
-        print('replay')
+        self.player.replay()
 
 class Playlist(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):
@@ -191,7 +198,6 @@ class Playlist(ctk.CTkFrame):
         if not foldername.strip(): # String Input is space or empty but pressed ok
             messagebox.showerror("Value Error", "Empty Field") # if the foldername is empty
             return
-
 
         newpath = PATH/foldername
 
@@ -337,7 +343,8 @@ class Musiclist(ctk.CTkFrame):
     def playMusic(self, button):
         file = self.path / button.music
         if file.exists():
-            self.master.setMarquee(button.music)
+            self.master.setMarquee(button.music.replace('.mp3', ''))
+            self.master.playMusic(button.music)
 
     def flushListframe(self):
         for widget in self.list.winfo_children():
