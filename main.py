@@ -68,12 +68,17 @@ class MainApp(ctk.CTk):
     def playMusic(self, name):
         self.playerFrame.play(name)
     
+    def stopMusic(self): # called by delete button
+        self.playerFrame.stop()
+    
 
 class Player(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):
         super().__init__(master,**kwargs)
         # master
         self.master = master
+        self.drag = False
+        self.offset = 0
         # init theme, fonts,images
         self.theme = theme
         self.fonts = fonts
@@ -82,10 +87,21 @@ class Player(ctk.CTkFrame):
         # grid config
         self.grid_columnconfigure(0, weight=1)
         # widgets
-        self.marquee = MarqueeLabel(self, "",self.theme['marqueelabel'], self.fonts, width=560)
-        self.slider = ctk.CTkSlider(self, orientation='horizontal', from_=0, to=100, height=20,width=800)
-        self.slider.set(0)
+        self.marquee = MarqueeLabel(self, "",self.theme['marqueelabel'], self.fonts, width=560) # header
+        # slider - 2nd row
+        self.slider_container = ctk.CTkFrame(self, fg_color='transparent')
+        self.slider_frame = ctk.CTkFrame(self.slider_container, fg_color='transparent')
+        self.timeslider = ctk.CTkSlider(self.slider_frame, orientation='horizontal', from_=0, to=100, height=20,width=800) # slider
+        self.timeslider.set(0)
+        self.timeLabel = Label(self.slider_frame,text="", font=self.fonts['main'])
+        self.timeLabel.setText(self.ms_to_time(0))
+        self.timemaxLabel = Label(self.slider_frame,text="", font=self.fonts['main'])
+        self.timemaxLabel.setText(self.ms_to_time(0))
+        # binding
+        self.timeslider.bind('<Button-1>',self.during_drag)
+        self.timeslider.bind('<ButtonRelease-1>', lambda e: self.after_drag(self.timeslider.get()))
 
+        #controllers - 3rd row
         self.container = ctk.CTkFrame(self, fg_color="transparent")
         self.control = ctk.CTkFrame(self.container, fg_color="transparent")
         
@@ -97,8 +113,18 @@ class Player(ctk.CTkFrame):
 
         
         # pack and grid
+        # marquee label
         self.marquee.grid(row=0,column=0,pady=2)
-        self.slider.grid(row=1,column=0,pady=2)
+
+        #slider
+        self.timeLabel.pack(side='left')
+        self.timeslider.pack(side='left')
+        self.timemaxLabel.pack(side='left')
+        self.slider_frame.pack(anchor='center')
+
+        self.slider_container.grid(row=1,column=0, pady=5, sticky='ew')
+
+        # controllers
         self.replaybtn.pack(side='left')
         self.backwardbtn.pack(side='left')
         self.playbtn.pack(side='left')
@@ -115,10 +141,16 @@ class Player(ctk.CTkFrame):
     
     def setFolder(self, name):
         self.player.setFolder(name)
+    
+    def stop(self):
+        pass
 
     def play(self, name):
         self.playbtn.reset()
+        self.timeslider.set(0)
         self.player.playByName(name)
+        self.timemaxLabel.setText(self.ms_to_time(self.player.getLength()))
+        self.slider_id = self.after(50, self.sliding_inter)
     
     def resume(self):
         self.player.resume()
@@ -137,6 +169,39 @@ class Player(ctk.CTkFrame):
 
     def replay(self):
         self.player.replay()
+    
+    def sliding_inter(self):
+        if getattr(self, 'drag', False):
+            self.after(50, self.sliding_inter)
+            return
+        position = self.player.get_pos()
+        if position < 0:
+            position = 0
+        timelapse = position + self.offset
+        maxtime = self.player.getLength()
+        time_perc = (timelapse / maxtime) * 100 # convert to percentage
+        self.timeslider.set(time_perc) # set slider to percentage
+        self.timeLabel.setText(self.ms_to_time(int(timelapse)))
+        self.slider_id = self.after(50, self.sliding_inter)
+    
+    def during_drag(self, _):
+        self.drag = True
+        if hasattr(self, 'slider_id'):
+            self.after_cancel(self.slider_id)
+
+    def after_drag(self, value): # value is percentage
+        maxtime = self.player.getLength()
+        position = (maxtime * value)//100
+        self.player.set_pos(position//1000)
+        self.offset = position
+        self.slider_id = self.after(50, self.sliding_inter)
+        self.drag = False
+    
+    def ms_to_time(self, time):
+        second = time // 1000
+        minute = second // 60
+        second = minute % 60
+        return f"{minute}:{second:02d}"
 
 class Playlist(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):
