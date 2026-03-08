@@ -1,13 +1,16 @@
 from pygame import mixer as mx
+from pathlib import Path
 
 class MusicPlayer:
-    def __init__(self, master):
+    def __init__(self):
         mx.init()
-        self.master = master
-        self.current_music = None
+        self.folder = None
+        self.index = 0
+        self.musicList = []
     
-    def play(self, path):
-        mx.music.load(path)
+    def play(self, name):
+        self.index = self.getIndex(name)
+        mx.music.load()
         mx.music.play()
 
     def stop(self):
@@ -24,3 +27,16 @@ class MusicPlayer:
     
     def set_pos(self, pos):
         mx.music.set_pos(pos=pos)
+    
+    def setList(self, songs):
+        self.musicList = songs
+    
+    def setFolder(self, name):
+        self.folder = name
+    
+    def getIndex(self, name):
+        return self.musicList.index(name) if name in self.musicList else 0
+
+    def concat(self,index):
+        file = self.musicList[index]
+        return str(self.folder/file)

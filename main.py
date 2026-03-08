@@ -55,9 +55,15 @@ class MainApp(ctk.CTk):
     
     def setPlaylist(self, path): # called by Playlistframe
         self.musicListFrame.loadPlaylist(path) # runs musiclistframe function
-    
+        
     def setMarquee(self, text):
         self.playerFrame.setMarquee(str(text))
+
+    def setMusicList(self):
+        self.playerFrame.setMusicList(self.musicListFrame.data['songs'])
+    
+    def setFolder(self, path):
+        self.playerFrame.setFolder(path)
     
 
 class Player(ctk.CTkFrame):
@@ -69,7 +75,7 @@ class Player(ctk.CTkFrame):
         self.theme = theme
         self.fonts = fonts
         self.images = images
-        self.player = MusicPlayer(master)
+        self.player = MusicPlayer()
         # grid config
         self.grid_columnconfigure(0, weight=1)
         # widgets
@@ -87,7 +93,7 @@ class Player(ctk.CTkFrame):
         self.replaybtn = ImageButton(self.control, (*self.images['replay'], 48), self.theme['imagebutton'],width=48,corner_radius=20, toggle=False, command=self.replay)
 
         
-
+        # pack and grid
         self.marquee.grid(row=0,column=0,pady=2)
         self.slider.grid(row=1,column=0,pady=2)
         self.replaybtn.pack(side='left')
@@ -96,16 +102,21 @@ class Player(ctk.CTkFrame):
         self.forwardbtn.pack(side='left')
         self.nextbtn.pack(side='left')
         self.control.pack(anchor='center')
-
         self.container.grid(row=2,column=0,pady=5, sticky='ew')
     
     def setMarquee(self, text):
         self.marquee.setText(text)
     
-    def play(self):
+    def setMusicList(self,songs):
+        self.player.setList(songs)
+    
+    def setFolder(self, name):
+        self.player.setFolder(name)
+
+    def play(self): # 
         print('play')
 
-    def pause(self):
+    def pause(self): #
         print('pause')
     
     def forward(self):
@@ -154,13 +165,13 @@ class Playlist(ctk.CTkFrame):
         self.header_title.grid(row=0,column=1)
         self.header_button.grid(row=0,column=2,sticky='se',padx=5,pady=5)
         self.start()
-        self.active=None
+        self.prev=None
 
     def start(self):
         folders = Path(PATH).iterdir()
         for path in folders:
             button = PlaylistButton(self.list, path=path,text=path.name,style=self.theme['button'], font=self.fonts["main"],anchor='w',height=60)
-            button.configure(command= lambda b=button: self.loadMusiclist(b))
+            button.setCommand(command= lambda b=button: self.loadMusiclist(b))
 
             button.pack(fill='x', expand=True, padx=[1,1], pady=[1,1])
     
@@ -200,13 +211,12 @@ class Playlist(ctk.CTkFrame):
         self.start()
 
     def loadMusiclist(self, button):
-        if self.active and self.active.winfo_exists(): # revert the color back to normal state
-            self.active.configure(fg_color=self.theme["button"]['fg_color'])
-        if self.active == button: # check if active and b is same then  return if same
-            return 
-        self.active = button # change the active to new button
-        self.active.configure(fg_color=self.theme["button"]['active_color']) # change the color of new button to active color
-        self.master.setPlaylist(self.active.path) # load this from main then passed to MusiclistFrame
+        if self.prev == button:
+            return
+        if self.prev:
+            self.prev.reset()
+        self.master.setPlaylist(button.path) # load this from main then passed to MusiclistFrame
+        self.prev = button
 
     def getFirstPlayList(self):
         folder = next(Path(PATH).iterdir(),None)
@@ -257,7 +267,7 @@ class Musiclist(ctk.CTkFrame):
         else:
             self.toplevel.focus()
 
-    def loadPlaylist(self,path):# called from main class
+    def loadPlaylist(self,path):# called from main class once
         self.flushListframe()
         self.path = path
         if not path:
@@ -267,7 +277,10 @@ class Musiclist(ctk.CTkFrame):
         
         self.header_title.setText(self.data['title'])
 
-        self.start() # 
+        self.master.setMusicList()# transfer list to main class
+        self.master.setFolder(self.path)
+
+        self.start()
 
     def start(self): # loads the musics
         for song in self.data['songs']:
@@ -275,10 +288,10 @@ class Musiclist(ctk.CTkFrame):
             container.pack_propagate(False)
             # widget of container
             startbutton = MusiclistButton(container, image=(*self.images['play_arrow'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False) 
-            startbutton.set_command(command=lambda b=startbutton: self.playMusic(b))
+            startbutton.setCommand(command=lambda b=startbutton: self.playMusic(b))
             label = Label(container, text=ellipsis(song,70), font=self.fonts['main'],anchor='w')
             deletebutton = MusiclistButton(container, image=(*self.images['trash'], 24),style=self.theme['imagebutton'],width=26,height=26, music=song, toggle=False)
-            deletebutton.set_command(command=lambda b=deletebutton: self.removeMusic(b))
+            deletebutton.setCommand(command=lambda b=deletebutton: self.removeMusic(b))
 
             startbutton.pack(side='left',padx=[20,10])
             label.pack(side='left')

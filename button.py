@@ -28,7 +28,7 @@ class Button(ctk.CTkButton):
         else:
             self.configure(fg_color=self.b_style['fg_color'])
     
-    def set_command(self, command): # set new command
+    def setCommand(self, command): # set new command
         if command:
             self.user_command = command
     
@@ -39,6 +39,10 @@ class Button(ctk.CTkButton):
     def setImage(self, img): #
         if img:
             self.configure(image=img)
+
+    def reset(self):
+        self.active = False
+        self.configure(fg_color=self.b_style['fg_color'])
 
 
 class PlaylistButton(Button): # Inherits Button and store path
@@ -72,6 +76,10 @@ class ToggleImageButton(Button):
         else:
             self.commands[1]() # second command
         self.setImage(self.pre_images[self.is_pause])
+    
+    def reset(self):
+        self.is_pause = False
+        self.commands[0]()
 
 
 class MusiclistButton(ImageButton): # Inherits ImageButton and store music
