@@ -264,7 +264,7 @@ class Playlist(ctk.CTkFrame):
     def flushListframe(self): # only to be called when reloading playlist after adding
         for widget in self.list.winfo_children():
             widget.destroy()
-        self.active = None
+        self.prev = None
     
     def createPlaylist(self):
         dialog = ctk.CTkInputDialog(text="Name of playlist ♫", title="Test")
@@ -348,7 +348,7 @@ class Musiclist(ctk.CTkFrame):
         self.header_menu.pack(side='left',padx=5)
     def optionMenu(self):
         if self.toplevel == None or not self.toplevel.winfo_exists():
-            self.toplevel = OptionWindow(self)
+            self.toplevel = OptionWindow(self, self.data)
         else:
             self.toplevel.focus()
 
@@ -383,6 +383,9 @@ class Musiclist(ctk.CTkFrame):
             deletebutton.pack(side='right',padx=[5,20])
             container.pack(side='top',fill='x',pady=1)
 
+    def saveJSON(self, object):
+        with open(self.path/"list.json", 'w') as fp:
+            json.dump(object, fp)
     
     def refresh(self): # refresh the framelist
         self.flushListframe() 
