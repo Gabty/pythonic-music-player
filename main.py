@@ -86,6 +86,8 @@ class Player(ctk.CTkFrame):
         self.player = MusicPlayer()
         # local variable
         self.max_time = 0
+        self.step_time = 5000
+        self.inProcess = False # prevent multiple skipping
         # grid config
         self.grid_columnconfigure(0, weight=1)
         # widgets
@@ -143,10 +145,6 @@ class Player(ctk.CTkFrame):
     def setFolder(self, name):
         self.player.setFolder(name)
 
-    
-    def stop(self):
-        pass
-
     def play(self, name):
         self.playbtn.reset()
         self.timeslider.set(0)
@@ -162,18 +160,24 @@ class Player(ctk.CTkFrame):
         self.player.pause()
     
     def forward(self):
-        text = self.player.forward()
-        self.setMarquee(text.replace('.mp3', ''))
+        self.player.forward(self.step_time)
     
     def backward(self):
-        text = self.player.backward()
-        self.setMarquee(text.replace('.mp3', ''))
+        self.player.backward(self.step_time)
     
     def next(self):
-        self.player.next()
+        self.inProcess = False
+        text = self.player.next()
+        self.max_time = self.player.getLength()
+        self.timemaxLabel.setText(self.ms_to_time(self.max_time))
+        self.setMarquee(text.replace('.mp3', ''))
+        self.debug = True
 
     def replay(self):
-        self.player.replay()
+        text = self.player.replay()
+        self.max_time = self.player.getLength()
+        self.timemaxLabel.setText(self.ms_to_time(self.max_time))
+        self.setMarquee(text.replace('.mp3', ''))
     
     def sliding_inter(self):
         if getattr(self, 'drag', False):
@@ -183,6 +187,8 @@ class Player(ctk.CTkFrame):
         time_perc = (position / self.max_time) * 100 # convert to percentage
         self.timeslider.set(time_perc) # set slider to percentage
         self.timeLabel.setText(self.ms_to_time(position))
+        if self.player.isPlaying() == 0 and not self.inProcess: # prevent multiple skipping
+            self.after(0, self.next)
         self.slider_id = self.after(50, self.sliding_inter)
     
     def during_drag(self, _):

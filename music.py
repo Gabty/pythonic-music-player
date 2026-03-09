@@ -41,12 +41,20 @@ class MusicPlayer:
     def setList(self, songs):
         self.musicList = songs
     
-    def forward(self):
+    def forward(self, time): # time in ms
+        ms = min(self.player.get_time() + time, self.getLength())
+        self.player.set_time(ms)
+    
+    def backward(self, time): # time in ms
+        ms = max(self.player.get_time() - time, 0)
+        self.player.set_time(ms)
+    
+    def next(self):
         self.index = min(self.index + 1, len(self.musicList) - 1)
         self.playByIndex(self.index)
         return self.musicList[self.index]
     
-    def backward(self):
+    def replay(self):
         self.index = max(0, self.index - 1)
         self.playByIndex(self.index)
         return self.musicList[self.index]
@@ -67,3 +75,6 @@ class MusicPlayer:
     def getLength(self): # use mutagen instead vlc because its faster
         audio = File(self.file)
         return int(audio.info.length * 1000)
+
+    def isPlaying(self):
+        return self.player.is_playing()
