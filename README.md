@@ -13,6 +13,8 @@ Python Mixer Music was dropped because it lacks reliable positioning and seek su
 ## Features
 - Create and manage playlists
 - Import local music files
+- Play Audio MP3 and OGG
+- Playback Slider
 
 ## Tech
 - Python 3.12
