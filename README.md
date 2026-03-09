@@ -15,6 +15,9 @@ Python Mixer Music was dropped because it lacks reliable positioning and seek su
 - Import local music files
 - Play Audio MP3 and OGG
 - Playback Slider
+- Marquee Label
+- Replay and Next music
+- Fast forward or back controls
 
 ## Tech
 - Python 3.12
