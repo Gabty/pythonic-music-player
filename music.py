@@ -25,6 +25,7 @@ class MusicPlayer:
         self.index = index if index < len(self.musicList) else len(self.musicList) - 1
         self.file = self.getFile(self.index)
         self.play()
+        return self.musicList[self.index].replace('.mp3', '')
 
     def pause(self):
         self.player.pause()
@@ -42,22 +43,26 @@ class MusicPlayer:
         self.musicList = songs
     
     def forward(self, time): # time in ms
+        if not self.file:
+            return
         ms = min(self.player.get_time() + time, self.getLength())
         self.player.set_time(ms)
     
     def backward(self, time): # time in ms
+        if not self.file:
+            return
         ms = max(self.player.get_time() - time, 0)
         self.player.set_time(ms)
     
     def next(self):
         self.index = min(self.index + 1, len(self.musicList) - 1)
         self.playByIndex(self.index)
-        return self.musicList[self.index]
+        return self.musicList[self.index].replace('.mp3', '')
     
     def replay(self):
         self.index = max(0, self.index - 1)
         self.playByIndex(self.index)
-        return self.musicList[self.index]
+        return self.musicList[self.index].replace('.mp3', '')
     
     def setFolder(self, name):
         self.folder = name

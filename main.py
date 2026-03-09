@@ -156,8 +156,14 @@ class Player(ctk.CTkFrame):
     def resume(self):
         self.player.resume()
 
-    def pause(self): #
-        self.player.pause()
+    def pause(self):
+        if not self.player.file:
+            text = self.player.playByIndex(0)
+            self.max_time = self.player.getLength()
+            self.setMarquee(text)
+            self.slider_id = self.after(1, self.sliding_inter)
+        else:
+            self.player.pause()
     
     def forward(self):
         self.player.forward(self.step_time)
@@ -170,14 +176,16 @@ class Player(ctk.CTkFrame):
         text = self.player.next()
         self.max_time = self.player.getLength()
         self.timemaxLabel.setText(self.ms_to_time(self.max_time))
-        self.setMarquee(text.replace('.mp3', ''))
+        self.setMarquee(text)
+        self.slider_id = self.after(1, self.sliding_inter)
         self.debug = True
 
     def replay(self):
         text = self.player.replay()
         self.max_time = self.player.getLength()
         self.timemaxLabel.setText(self.ms_to_time(self.max_time))
-        self.setMarquee(text.replace('.mp3', ''))
+        self.slider_id = self.after(1, self.sliding_inter)
+        self.setMarquee(text)
     
     def sliding_inter(self):
         if getattr(self, 'drag', False):
@@ -187,8 +195,9 @@ class Player(ctk.CTkFrame):
         time_perc = (position / self.max_time) * 100 # convert to percentage
         self.timeslider.set(time_perc) # set slider to percentage
         self.timeLabel.setText(self.ms_to_time(position))
-        if self.player.isPlaying() == 0 and not self.inProcess: # prevent multiple skipping
-            self.after(0, self.next)
+        if round(time_perc) == 100 and not self.inProcess: # prevent multiple skipping
+            self.timeslider.set(0)
+            self.after(0, self.next) # non blocking timer that
         self.slider_id = self.after(50, self.sliding_inter)
     
     def during_drag(self, _):
