@@ -162,10 +162,12 @@ class Player(ctk.CTkFrame):
         self.player.pause()
     
     def forward(self):
-        self.player.forward()
+        text = self.player.forward()
+        self.setMarquee(text.replace('.mp3', ''))
     
     def backward(self):
-        self.player.backward()
+        text = self.player.backward()
+        self.setMarquee(text.replace('.mp3', ''))
     
     def next(self):
         self.player.next()
@@ -199,6 +201,7 @@ class Player(ctk.CTkFrame):
         minute = second // 60
         second = second % 60
         return f"{minute}:{second:02d}"
+
 class Playlist(ctk.CTkFrame):
     def __init__(self, master,theme, fonts,images, **kwargs):
         super().__init__(master, **kwargs)

@@ -41,6 +41,16 @@ class MusicPlayer:
     def setList(self, songs):
         self.musicList = songs
     
+    def forward(self):
+        self.index = min(self.index + 1, len(self.musicList) - 1)
+        self.playByIndex(self.index)
+        return self.musicList[self.index]
+    
+    def backward(self):
+        self.index = max(0, self.index - 1)
+        self.playByIndex(self.index)
+        return self.musicList[self.index]
+    
     def setFolder(self, name):
         self.folder = name
     
