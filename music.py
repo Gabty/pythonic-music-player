@@ -1,37 +1,42 @@
-from pygame import mixer as mx
+import vlc
 from mutagen import File
 
 class MusicPlayer:
     def __init__(self):
-        mx.init()
+        self.instance = vlc.Instance()
+        self.player = self.instance.media_player_new()
         self.folder = None
         self.index = 0
         self.musicList = []
+        self.file = None
     
+    def play(self):
+        media = self.instance.media_new(str(self.file))
+        self.player.set_media(media)
+        media.parse()
+        self.player.play()
+
     def playByName(self, name):
-        mx.music.unload()
         self.index = self.getIndex(name)
-        file = self.getFile(self.index)
-        print(file)
-        mx.music.load(file)
-        mx.music.play()
+        self.file = self.getFile(self.index)
+        self.play()
     
     def playByIndex(self, index):
-        mx.music.unload()
-        mx.music.load(self.getFile(index))
-        mx.music.play()
+        self.index = index if index < len(self.musicList) else len(self.musicList) - 1
+        self.file = self.getFile(self.index)
+        self.play()
 
     def pause(self):
-        mx.music.pause()
+        self.player.pause()
     
     def resume(self):
-        mx.music.unpause()
+        self.player.play()
 
-    def get_pos(self):
-        return mx.music.get_pos()
+    def get_pos(self): 
+        return self.player.get_time() # ms
     
-    def set_pos(self, pos):
-        mx.music.set_pos(pos)
+    def set_pos(self, pos): # pos in ms
+        self.player.set_time(int(pos))
     
     def setList(self, songs):
         self.musicList = songs
@@ -40,15 +45,15 @@ class MusicPlayer:
         self.folder = name
     
     def getIndex(self, name):
-        return self.musicList.index(name) if name in self.musicList else 0 # 
+        return self.musicList.index(name) if name in self.musicList else 0 
 
     def getFile(self,index): # return file path using index
         if index > len(self.musicList) or index < 0:
             return
         self.index = index
         file = self.musicList[self.index]
-        return str(self.folder/file)
+        return self.folder/file
 
-    def getLength(self):
-        audio = File(self.getFile(self.index))
+    def getLength(self): # use mutagen instead vlc because its faster
+        audio = File(self.file)
         return int(audio.info.length * 1000)

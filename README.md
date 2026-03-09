@@ -1,10 +1,14 @@
 # ♫ Pythonic Music Player ♫
 
 ## Description
-A desktop music player app that is built purely on python.
-The playlist are stored in the user's document folder for easy access.
+A desktop music player app that is built purely in python.
+The playlists are stored in the user's document folder for easy access.
 This app allows to import .mp3 and .ogg audio files.
-It uses pygame mixer to play the audio and control.
+
+It uses wrapper VLC to play the audio and control.
+Then mutagen is used to get the length of the audio since VLC is unrealiable on that part.
+
+Python Mixer Music was dropped because it lacks reliable positioning and seek support.
 
 ## Features
 - Create and manage playlists
@@ -15,7 +19,8 @@ It uses pygame mixer to play the audio and control.
 - CustomTkinter
 - Pillow
 - JSON
-- Pygame
+- python-vlc
+- mutagen
 
 ## Assets
 Images from https://www.flaticon.com/
